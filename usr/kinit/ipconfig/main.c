@@ -751,7 +751,9 @@ static int add_all_devices(struct netdev *template)
 		   logic the in-kernel ipconfig uses... */
 		if (!(flags & IFF_LOOPBACK) &&
 		    (flags & (IFF_BROADCAST | IFF_POINTOPOINT))) {
-			dprintf("Trying to bring up %s\n", de->d_name);
+		  dprintf("Trying to bring %s %s\n",
+			  template->caps & CAP_DOWN ? "down" : "up",
+			  de->d_name);
 
 			dev = add_device(de->d_name);
 			if (!dev)
