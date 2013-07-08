@@ -7,7 +7,8 @@ ipconfig [-c proto] [-d interface] [-i identifier]
 	 [-n] [-p port] [-t timeout] [interface ...]
 
 -c proto	Use PROTO as the configuration protocol for all
-		interfaces, unless overridden by specific interfaces.
+		interfaces.  Additional protocols may be specified
+		for specific interfaces.
 -d interface	Either the name of an interface, or a long spec.
 -i identifier	DHCP vendor class identifier.  The default is
 		"Linux ipconfig".
