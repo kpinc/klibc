@@ -627,7 +627,7 @@ static int parse_device(struct netdev *dev, const char *ip)
 	return 1;
 }
 
-static void bringup_device(struct netdev *dev)
+static void updown_device(struct netdev *dev)
 {
 	if (dev->caps & CAP_DOWN) {
 		netdev_down(dev);
@@ -644,7 +644,7 @@ static void bringup_device(struct netdev *dev)
 	}
 }
 
-static void bringup_one_dev(struct netdev *template, struct netdev *dev)
+static void updown_one_dev(struct netdev *template, struct netdev *dev)
 {
 	if (template->ip_addr != INADDR_NONE)
 		dev->ip_addr = template->ip_addr;
@@ -668,7 +668,7 @@ static void bringup_one_dev(struct netdev *template, struct netdev *dev)
 		dev->caps = template->caps;
 	
 
-	bringup_device(dev);
+	updown_device(dev);
 }
 
 static struct netdev *add_device(const char *info)
@@ -754,7 +754,7 @@ static int add_all_devices(struct netdev *template)
 			dev = add_device(de->d_name);
 			if (!dev)
 				continue;
-			bringup_one_dev(template, dev);
+			updown_one_dev(template, dev);
 		}
 	}
 	closedir(d);
@@ -862,7 +862,7 @@ int ipconfig_main(int argc, char *argv[])
 		case 'd':
 			dev = add_device(optarg);
 			if (dev)
-				bringup_device(dev);
+				updown_device(dev);
 			break;
 		case '?':
 			fprintf(stderr, "%s: invalid option -%c\n",
@@ -874,7 +874,7 @@ int ipconfig_main(int argc, char *argv[])
 	for (c = optind; c < argc; c++) {
 		dev = add_device(argv[c]);
 		if (dev)
-			bringup_device(dev);
+			updown_device(dev);
 	}
 
 	if (check_autoconfig()) {
