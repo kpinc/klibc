@@ -744,6 +744,8 @@ static int add_all_devices(struct netdev *template)
 		}
 		p[i] = '\0';
 		flags = strtoul(p, NULL, 0);
+		if (template->caps & CAP_DOWN)
+			flags &= IFF_UP;
 		/* Heuristic for if this is a reasonable boot interface.
 		   This is the same
 		   logic the in-kernel ipconfig uses... */
