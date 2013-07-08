@@ -56,7 +56,9 @@ struct protoinfo {
 #define PROTO_DHCP  2
 	{"dhcp"},
 #define PROTO_RARP  3
-	{"rarp"}
+	{"rarp"},
+#define PROTO_DOWN  4
+	{"down"}
 };
 
 static inline const char *my_inet_ntoa(uint32_t addr)
@@ -71,6 +73,10 @@ static inline const char *my_inet_ntoa(uint32_t addr)
 static void print_device_config(struct netdev *dev)
 {
 	printf("IP-Config: %s complete", dev->name);
+	if (dev->proto == PROTO_DOWN) {
+		printf(": interface down\n");
+		return;
+	}
 	if (dev->proto == PROTO_BOOTP || dev->proto == PROTO_DHCP)
 		printf(" (%s from %s)", protoinfos[dev->proto].name,
 		       my_inet_ntoa(dev->serverid ?
@@ -216,8 +222,10 @@ static void complete_device(struct netdev *dev)
 
 	if (!sysinfo(&info))
 		dev->uptime = info.uptime;
-	postprocess_device(dev);
-	configure_device(dev);
+	if (!(dev->caps & CAP_DOWN)) {
+		postprocess_device(dev);
+		configure_device(dev);
+	}
 	dump_device_config(dev);
 	print_device_config(dev);
 
@@ -526,6 +534,8 @@ static unsigned int parse_proto(const char *ip)
 		caps = CAP_BOOTP;
 	else if (strcmp(ip, "rarp") == 0)
 		caps = CAP_RARP;
+	else if (strcmp(ip, "down") == 0)
+		caps = CAP_DOWN;
 	else if (strcmp(ip, "none") == 0 || strcmp(ip, "static") == 0
 		 || strcmp(ip, "off") == 0)
 		goto bail;
@@ -619,12 +629,17 @@ static int parse_device(struct netdev *dev, const char *ip)
 
 static void bringup_device(struct netdev *dev)
 {
-	if (netdev_up(dev) == 0) {
-		if (dev->caps)
-			add_one_dev(dev);
-		else {
-			dev->proto = PROTO_NONE;
-			complete_device(dev);
+	if (dev->caps & CAP_DOWN) {
+		netdev_down(dev);
+		complete_device(dev);
+	} else {
+		if (netdev_up(dev) == 0) {
+			if (dev->caps)
+				add_one_dev(dev);
+			else {
+				dev->proto = PROTO_NONE;
+				complete_device(dev);
+			}
 		}
 	}
 }
@@ -647,7 +662,11 @@ static void bringup_one_dev(struct netdev *template, struct netdev *dev)
 		strcpy(dev->hostname, template->hostname);
 	if (template->reqhostname[0] != '\0')
 		strcpy(dev->reqhostname, template->reqhostname);
-	dev->caps &= template->caps;
+	if (dev->caps)
+		dev->caps &= template->caps & ~CAP_DOWN;
+	else
+		dev->caps = template->caps;
+	
 
 	bringup_device(dev);
 }
@@ -679,6 +698,7 @@ static struct netdev *add_device(const char *info)
 	for (i = 0; i < dev->hwlen; i++)
 		printf("%c%02x", i == 0 ? ' ' : ':', dev->hwaddr[i]);
 	printf(" mtu %d%s%s\n", dev->mtu,
+	       dev->caps & CAP_DOWN ? " DOWN" :
 	       dev->caps & CAP_DHCP ? " DHCP" :
 	       dev->caps & CAP_BOOTP ? " BOOTP" : "",
 	       dev->caps & CAP_RARP ? " RARP" : "");

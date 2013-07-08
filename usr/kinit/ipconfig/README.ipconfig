@@ -30,6 +30,9 @@ dhcp		use bootp and dhcp
 bootp		use bootp only
 rarp		use rarp (not currently supported)
 none		no autoconfiguration - either static config, or none at all
+down		bring down interfaces specified in the short form and those
+		specified in the long from with <autoconf> elements of
+		'off', 'static', and 'none'
 
 An interface spec can be either short form, which is just the name of
 an interface (eth0 or whatever), or long form.  The long form consists
@@ -74,7 +77,8 @@ of up to seven elements, separated by colons:
                 'rarp', 'bootp', or 'dhcp' the specified protocol is
                 used.  If the value is 'both', 'all' or empty, all
                 protocols are used.  'off', 'static' or 'none' means
-                no autoconfiguration.
+                no autoconfiguration.  'down' means bring the interface
+                down.
 
 IP addresses and netmasks must be either absent (defaulting to zero)
 or presented in dotted-quad notation.

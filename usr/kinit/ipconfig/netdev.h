@@ -56,6 +56,7 @@ extern struct netdev *ifaces;
 #define CAP_BOOTP	(1<<0)
 #define CAP_DHCP	(1<<1)
 #define CAP_RARP	(1<<2)
+#define CAP_DOWN	(1<<3)
 
 /*
  * Device states
